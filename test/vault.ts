@@ -31,7 +31,7 @@ describe('Lim-O', function () {
 
      await eth.mint(user1.address,100);
      await eth.connect(user1).approve(vault.address,100);
-     await vault.connect(user1).Deposit(100, eth.address);
+     await vault.connect(user1).deposit(100, eth.address);
      await expect( await vault.connect(user1).getBalance(eth.address)).to.be.equal(100);
      console.log(await vault.connect(user1).getBalance(eth.address));
 	});
@@ -39,12 +39,12 @@ describe('Lim-O', function () {
     it('create deposit2', async () => {
       await btc.mint(user1.address,10);
       await btc.connect(user1).approve(vault.address,10);
-      await vault.connect(user1).Deposit(10, btc.address);
+      await vault.connect(user1).deposit(10, btc.address);
       await expect( await vault.connect(user1).getBalance(btc.address)).to.be.equal(10);
     });
 
 	it('create withdraw', async () => {
-     await vault.connect(user1).Withdraw(10, eth.address);
+     await vault.connect(user1).withdraw(10, eth.address);
      await expect( await vault.connect(user1).getBalance(eth.address)).to.be.equal(90);
      await expect( await  eth.balanceOf(user1.address)).to.be.equal(10);
 		
