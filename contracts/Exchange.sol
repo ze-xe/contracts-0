@@ -5,11 +5,30 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { errors } from "./libraries/Errors.sol";
 import "./Vault.sol";
+import "./System.sol";
 
 contract Exchange {
-    Vault public vault;
     using SafeERC20 for IERC20;
 
+    event OrderCreated(
+        bytes32 orderId,
+        address maker,
+        address token0,
+        address token1,
+        uint256 amount,
+        uint256 _exchangeRate,
+        uint256 orderType
+    );
+
+    event PairCreated(
+        bytes32 pairId,
+        address token0,
+        address token1,
+        uint256 exchangeRateDecimals,
+        uint256 minToken0Order,
+        uint256 minToken1Order
+    );
+    
     enum OrderType {
         LIMITSELL,
         LIMITBUY
@@ -35,9 +54,10 @@ contract Exchange {
 
     mapping(bytes32 => Order) public placedOrders;
     mapping(bytes32 => Pair) public pairs;
+    System public system;
 
-    constructor(address _vault) {
-        vault = Vault(_vault);
+    constructor(address _system) {
+        system = System(_system);
     }
 
     function createPair(
@@ -47,7 +67,7 @@ contract Exchange {
         uint256 minToken0Order,
         uint256 minToken1Order
     ) external {
-        if(msg.sender != vault.owner()) revert errors.NotAuthorized();
+        if(msg.sender != system.admin()) revert errors.NotAuthorized();
 
         bytes32 pairHash = keccak256(abi.encodePacked(token0, token1));
         Pair storage pair = pairs[pairHash];
@@ -117,10 +137,10 @@ contract Exchange {
 
         if (orderType == uint256(OrderType.LIMITSELL)) {
             order.amount = amount;
-            vault.lockToken(order.token0, amount, msg.sender);
+            system.vault().lockToken(order.token0, amount, msg.sender);
         } else if (orderType == uint256(OrderType.LIMITBUY)) {
             order.amount = amount;
-            vault.lockToken(order.token1, amount, msg.sender);
+            system.vault().lockToken(order.token1, amount, msg.sender);
         }
 
         emit OrderCreated(
@@ -143,12 +163,12 @@ contract Exchange {
         
         if (order.amount < amount) {
             uint extraAmount = amount - order.amount;
-            vault.lockToken(token, extraAmount, msg.sender);
-            vault.decreaseBalance(token, extraAmount, order.maker);
+            system.vault().lockToken(token, extraAmount, msg.sender);
+            system.vault().decreaseBalance(token, extraAmount, order.maker);
         } else if (order.amount > amount) {
             uint lessAmount = order.amount - amount;
-            vault.unlockToken(token, lessAmount, msg.sender);
-            vault.increaseBalance(token, lessAmount, order.maker);
+            system.vault().unlockToken(token, lessAmount, msg.sender);
+            system.vault().increaseBalance(token, lessAmount, order.maker);
         }
 
         order.amount = amount;
@@ -170,44 +190,24 @@ contract Exchange {
 
         if (order.orderType == uint256(OrderType.LIMITSELL)) {
             // decrement maker's token0 balance
-            vault.unlockToken(order.token0, fillAmount, order.maker);
-            vault.decreaseBalance(order.token0, fillAmount, order.maker);
+            system.vault().unlockToken(order.token0, fillAmount, order.maker);
+            system.vault().decreaseBalance(order.token0, fillAmount, order.maker);
             // decrement msg.sender's token1 balance
-            vault.decreaseBalance(order.token1, token1Amount, msg.sender);
+            system.vault().decreaseBalance(order.token1, token1Amount, msg.sender);
             // increment msg.sender's token0 balance
-            vault.increaseBalance(order.token0, fillAmount, msg.sender);
+            system.vault().increaseBalance(order.token0, fillAmount, msg.sender);
             // increment maker's token1 balance
-            vault.increaseBalance(order.token1, token1Amount, order.maker);
+            system.vault().increaseBalance(order.token1, token1Amount, order.maker);
         } else if (order.orderType == uint256(OrderType.LIMITBUY)) {
             // decrement maker's token1 balance
-            vault.unlockToken(order.token1, token1Amount, order.maker);
-            vault.decreaseBalance(order.token1, token1Amount, order.maker);
+            system.vault().unlockToken(order.token1, token1Amount, order.maker);
+            system.vault().decreaseBalance(order.token1, token1Amount, order.maker);
             // decrement msg.sender's token0 balance
-            vault.decreaseBalance(order.token0, fillAmount, msg.sender);
+            system.vault().decreaseBalance(order.token0, fillAmount, msg.sender);
             // increment msg.sender's token1 balance
-            vault.increaseBalance(order.token1, token1Amount, msg.sender);
+            system.vault().increaseBalance(order.token1, token1Amount, msg.sender);
             // increment maker's token0 balance
-            vault.increaseBalance(order.token0, fillAmount, order.maker);
+            system.vault().increaseBalance(order.token0, fillAmount, order.maker);
         }
     }
-
-
-    event OrderCreated(
-        bytes32 orderId,
-        address maker,
-        address token0,
-        address token1,
-        uint256 amount,
-        uint256 _exchangeRate,
-        uint256 orderType
-    );
-
-    event PairCreated(
-        bytes32 pairId,
-        address token0,
-        address token1,
-        uint256 exchangeRateDecimals,
-        uint256 minToken0Order,
-        uint256 minToken1Order
-    );
 }
