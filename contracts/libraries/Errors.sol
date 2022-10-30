@@ -9,6 +9,6 @@ library errors{
     error InvalidExchangeRate(uint);
     error InvalidOrderType(uint);
     error InvalidOrderAmount(uint);
-
+    error OrderNotFound(bytes32);
     error PairNotSupported();
 }

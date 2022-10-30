@@ -19,14 +19,14 @@ contract Vault is Ownable {
     mapping(address => mapping(address => uint256)) public userTokenBalanceInOrder;
 
     // check for insufficient balance
-    function deposit(uint256 amount, address token) external {
+    function deposit(address token, uint256 amount) external {
         if (amount == 0) revert errors.ZeroAmt();
         IERC20(token).safeTransferFrom(msg.sender, address(this), amount);
         userTokenBalance[msg.sender][token] += amount;
         emit TokensDeposited(msg.sender, token, amount);
     }
 
-    function withdraw(uint256 amount, address token) external {
+    function withdraw(address token, uint256 amount) external {
         if (userTokenBalance[msg.sender][token] < amount)
             revert errors.InsufficientVaultBalance(
                 userTokenBalance[msg.sender][token]
@@ -45,28 +45,24 @@ contract Vault is Ownable {
         address token,
         uint256 amount,
         address account
-    ) external {
-        if (msg.sender != exchange) revert errors.NotAuthorized();
+    ) external onlyExchanger {
         userTokenBalanceInOrder[account][token] += amount;
-        userTokenBalance[account][token] -= amount;
     }
 
     //Update data on order execution
     function increaseBalance(
         address token,
-        address account,
-        uint256 amount
-    ) external {
-        if (msg.sender != exchange) revert errors.NotAuthorized();
+        uint256 amount,
+        address account
+    ) external onlyExchanger {
         userTokenBalance[account][token] += amount;
     }
 
     function decreaseBalance(
         address token,
-        address account,
-        uint256 amount
-    ) external {
-        if (msg.sender != exchange) revert errors.NotAuthorized();
+        uint256 amount,
+        address account
+    ) external onlyExchanger {
         userTokenBalance[account][token] -= amount;
     }
 
@@ -75,14 +71,17 @@ contract Vault is Ownable {
         address token,
         uint256 amount,
         address account
-    ) external {
-        if (msg.sender != exchange) revert errors.NotAuthorized();
+    ) external onlyExchanger {
         userTokenBalanceInOrder[account][token] -= amount;
-        userTokenBalance[account][token] += amount;
     }
 
     function updateExchangeAddress(address _exchangeAdd) public onlyOwner {
         exchange = _exchangeAdd;
+    }
+
+    modifier onlyExchanger() {
+        require(msg.sender == exchange, "Only Exchanger can call this function");
+        _;
     }
 
     event TokensDeposited(address account, address token, uint256 amount);

@@ -40,6 +40,33 @@ contract Exchange {
         vault = Vault(_vault);
     }
 
+    function createPair(
+        address token0,
+        address token1,
+        uint256 exchangeRateDecimals,
+        uint256 minToken0Order,
+        uint256 minToken1Order
+    ) external {
+        if(msg.sender != vault.owner()) revert errors.NotAuthorized();
+
+        bytes32 pairHash = keccak256(abi.encodePacked(token0, token1));
+        Pair storage pair = pairs[pairHash];
+        pair.token0 = token0;
+        pair.token1 = token1;
+        pair.exchangeRateDecimals = exchangeRateDecimals;
+        pair.minToken0Order = minToken0Order;
+        pair.minToken1Order = minToken1Order;
+
+        emit PairCreated(
+            pairHash,
+            token0,
+            token1,
+            exchangeRateDecimals,
+            minToken0Order,
+            minToken1Order
+        );
+    }
+
     function createLimitOrder(
         address token0,
         address token1,
@@ -110,33 +137,60 @@ contract Exchange {
     function updateLimitOrder(bytes32 orderId, uint256 amount) external {
         Order storage order = placedOrders[orderId];
 
-        if (order.orderType == uint256(OrderType.LIMITSELL)) {
-            if (order.amount < amount) {
-                vault.lockToken(order.token0, amount - order.amount, msg.sender);
-            } else if (order.amount > amount) {
-                vault.unlockToken(order.token0, order.amount - amount, msg.sender);
-            }
-        } else if (order.orderType == uint256(OrderType.LIMITBUY)) {
-            if (order.amount < amount) {
-                vault.lockToken(order.token1, amount - order.amount, msg.sender);
-            } else if (order.amount > amount) {
-                vault.unlockToken(order.token1, order.amount - amount, msg.sender);
-            }
+        address token = order.orderType == uint256(OrderType.LIMITSELL)
+            ? order.token0
+            : order.token1;
+        
+        if (order.amount < amount) {
+            uint extraAmount = amount - order.amount;
+            vault.lockToken(token, extraAmount, msg.sender);
+            vault.decreaseBalance(token, extraAmount, order.maker);
+        } else if (order.amount > amount) {
+            uint lessAmount = order.amount - amount;
+            vault.unlockToken(token, lessAmount, msg.sender);
+            vault.increaseBalance(token, lessAmount, order.maker);
         }
+
         order.amount = amount;
     }
 
     function executeLimitOrder(bytes32 orderId, uint256 fillAmount) external {
+        // Order
         Order memory order = placedOrders[orderId];
+        /* -------------------------------------------------------------------------- */
+        /*                                 Validation                                 */
+        /* -------------------------------------------------------------------------- */
+        if(order.maker == address(0)) revert errors.OrderNotFound(orderId);
+        if(order.amount - order.fill < fillAmount) revert errors.ZeroAmt();
         
+        // Pair
         Pair memory pair = pairs[keccak256(abi.encodePacked(order.token0, order.token1))];
+
+        uint256 token1Amount = fillAmount * order.exchangeRate / 10**pair.exchangeRateDecimals;
+
         if (order.orderType == uint256(OrderType.LIMITSELL)) {
-            uint256 token1Amt = fillAmount * order.exchangeRate / 10**pair.exchangeRateDecimals;
-            vault.increaseBalance(order.token1, order.maker, token1Amt);
+            // decrement maker's token0 balance
             vault.unlockToken(order.token0, fillAmount, order.maker);
-            vault.decreaseBalance(order.token0, order.maker, fillAmount);
+            vault.decreaseBalance(order.token0, fillAmount, order.maker);
+            // decrement msg.sender's token1 balance
+            vault.decreaseBalance(order.token1, token1Amount, msg.sender);
+            // increment msg.sender's token0 balance
+            vault.increaseBalance(order.token0, fillAmount, msg.sender);
+            // increment maker's token1 balance
+            vault.increaseBalance(order.token1, token1Amount, order.maker);
+        } else if (order.orderType == uint256(OrderType.LIMITBUY)) {
+            // decrement maker's token1 balance
+            vault.unlockToken(order.token1, token1Amount, order.maker);
+            vault.decreaseBalance(order.token1, token1Amount, order.maker);
+            // decrement msg.sender's token0 balance
+            vault.decreaseBalance(order.token0, fillAmount, msg.sender);
+            // increment msg.sender's token1 balance
+            vault.increaseBalance(order.token1, token1Amount, msg.sender);
+            // increment maker's token0 balance
+            vault.increaseBalance(order.token0, fillAmount, order.maker);
         }
     }
+
 
     event OrderCreated(
         bytes32 orderId,
@@ -146,5 +200,14 @@ contract Exchange {
         uint256 amount,
         uint256 _exchangeRate,
         uint256 orderType
+    );
+
+    event PairCreated(
+        bytes32 pairId,
+        address token0,
+        address token1,
+        uint256 exchangeRateDecimals,
+        uint256 minToken0Order,
+        uint256 minToken1Order
     );
 }
