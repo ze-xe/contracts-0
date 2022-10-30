@@ -8,8 +8,8 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract Vault is Ownable {
     using SafeERC20 for IERC20;
-    address immutable admin;
-    address exchange;
+    address public admin;
+    address public exchange;
 
     constructor() {
         admin = msg.sender;
@@ -18,83 +18,73 @@ contract Vault is Ownable {
     mapping(address => mapping(address => uint256)) public userTokenBalance;
     mapping(address => mapping(address => uint256)) public userTokenBalanceInOrder;
 
-    //check for insufficient balance
-    function deposit(uint256 dAmt, address _tokenAdd) external {
-        if (dAmt == 0) revert errors.ZeroAmt();
-        IERC20(_tokenAdd).safeTransferFrom(msg.sender, address(this), dAmt);
-        userTokenBalance[msg.sender][_tokenAdd] += dAmt;
-        emit TokensDeposited(msg.sender, _tokenAdd, dAmt);
+    // check for insufficient balance
+    function deposit(uint256 amount, address token) external {
+        if (amount == 0) revert errors.ZeroAmt();
+        IERC20(token).safeTransferFrom(msg.sender, address(this), amount);
+        userTokenBalance[msg.sender][token] += amount;
+        emit TokensDeposited(msg.sender, token, amount);
     }
 
-    function withdraw(uint256 wAmt, address _tokenAdd) external {
-        if (userTokenBalance[msg.sender][_tokenAdd] < wAmt)
+    function withdraw(uint256 amount, address token) external {
+        if (userTokenBalance[msg.sender][token] < amount)
             revert errors.InsufficientVaultBalance(
-                userTokenBalance[msg.sender][_tokenAdd]
+                userTokenBalance[msg.sender][token]
             );
-        IERC20(_tokenAdd).safeTransfer(msg.sender, wAmt);
-        userTokenBalance[msg.sender][_tokenAdd] -= wAmt;
-        emit TokenWithdrawn(msg.sender, _tokenAdd, wAmt);
+        IERC20(token).safeTransfer(msg.sender, amount);
+        userTokenBalance[msg.sender][token] -= amount;
+        emit TokenWithdrawn(msg.sender, token, amount);
     }
 
-    function getBalance(address _tokenAdd) public view returns (uint256) {
-        return userTokenBalance[msg.sender][_tokenAdd];
+    function getBalance(address token) public view returns (uint256) {
+        return userTokenBalance[msg.sender][token];
     }
 
     // Update sellers asset details only on LIMITSELL
     function lockToken(
         address token,
-        uint256 tknAmt,
+        uint256 amount,
         address account
     ) external {
         if (msg.sender != exchange) revert errors.NotAuthorized();
-        userTokenBalanceInOrder[account][token] += tknAmt;
-        userTokenBalance[account][token] -= tknAmt;
+        userTokenBalanceInOrder[account][token] += amount;
+        userTokenBalance[account][token] -= amount;
     }
-
-    //   //Update data on order execution
-    //     function updatelimitOrderData(address _tknAssetAdded, uint256 tknAmtAdded, address _tknAssetSold, uint256 tknAmtSold) external {
-    //      userTokenBalance[msg.sender][_tknAssetAdded] += tknAmtAdded;
-    //      userTokenBalanceInOrder[msg.sender][_tknAssetSold] -= tknAmtSold;
-    //    }
 
     //Update data on order execution
     function increaseBalance(
         address token,
         address account,
-        uint256 amt
+        uint256 amount
     ) external {
         if (msg.sender != exchange) revert errors.NotAuthorized();
-        userTokenBalance[account][token] += amt;
-        // userTokenBalanceInOrder[msg.sender][_tknAssetSold] -= tknAmtSold;
+        userTokenBalance[account][token] += amount;
     }
 
     function decreaseBalance(
         address token,
         address account,
-        uint256 amt
+        uint256 amount
     ) external {
         if (msg.sender != exchange) revert errors.NotAuthorized();
-        userTokenBalance[account][token] -= amt;
+        userTokenBalance[account][token] -= amount;
     }
 
     // Update sellers asset details only on LIMITSELL
     function unlockToken(
         address token,
-        address account,
-        uint256 tknAmt
+        uint256 amount,
+        address account
     ) external {
-        userTokenBalanceInOrder[account][token] -= tknAmt;
-        userTokenBalance[account][token] += tknAmt;
+        if (msg.sender != exchange) revert errors.NotAuthorized();
+        userTokenBalanceInOrder[account][token] -= amount;
+        userTokenBalance[account][token] += amount;
     }
 
     function updateExchangeAddress(address _exchangeAdd) public onlyOwner {
         exchange = _exchangeAdd;
     }
 
-    event TokensDeposited(
-        address depositor,
-        address tokenAdd,
-        uint256 tokenAmt
-    );
-    event TokenWithdrawn(address depositor, address tokenAdd, uint256 tokenAmt);
+    event TokensDeposited(address account, address token, uint256 amount);
+    event TokenWithdrawn(address account, address token, uint256 amount);
 }
