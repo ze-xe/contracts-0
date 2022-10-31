@@ -11,15 +11,15 @@
     "absolutePath": "/Users/prasad/projects/synthex/dex/contracts/Migrations.sol",
     "exportedSymbols": {
       "Migrations": [
-        706
+        811
       ]
     },
-    "id": 707,
+    "id": 812,
     "license": "MIT",
     "nodeType": "SourceUnit",
     "nodes": [
       {
-        "id": 705,
+        "id": 810,
         "literals": [
           "solidity",
           "^",
@@ -35,15 +35,15 @@
         "contractDependencies": [],
         "contractKind": "contract",
         "fullyImplemented": true,
-        "id": 706,
+        "id": 811,
         "linearizedBaseContracts": [
-          706
+          811
         ],
         "name": "Migrations",
         "nameLocation": "66:10:1",
         "nodeType": "ContractDefinition",
         "nodes": [],
-        "scope": 707,
+        "scope": 812,
         "src": "57:23:1",
         "usedErrors": []
       }
@@ -54,15 +54,15 @@
     "absolutePath": "/Users/prasad/projects/synthex/dex/contracts/Migrations.sol",
     "exportedSymbols": {
       "Migrations": [
-        706
+        811
       ]
     },
-    "id": 707,
+    "id": 812,
     "license": "MIT",
     "nodeType": "SourceUnit",
     "nodes": [
       {
-        "id": 705,
+        "id": 810,
         "literals": [
           "solidity",
           "^",
@@ -78,15 +78,15 @@
         "contractDependencies": [],
         "contractKind": "contract",
         "fullyImplemented": true,
-        "id": 706,
+        "id": 811,
         "linearizedBaseContracts": [
-          706
+          811
         ],
         "name": "Migrations",
         "nameLocation": "66:10:1",
         "nodeType": "ContractDefinition",
         "nodes": [],
-        "scope": 707,
+        "scope": 812,
         "src": "57:23:1",
         "usedErrors": []
       }
@@ -99,5 +99,5 @@
   },
   "networks": {},
   "schemaVersion": "2.0.1",
-  "updatedAt": "2022-10-31T07:02:14.445Z"
+  "updatedAt": "2022-10-31T08:59:55.667Z"
 }
