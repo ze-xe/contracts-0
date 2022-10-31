@@ -1,0 +1,103 @@
+{
+  "contractName": "Migrations",
+  "abi": [],
+  "bytecode": "0x6080604052348015600f57600080fd5b50d38015601b57600080fd5b50d28015602757600080fd5b50603f8060356000396000f3fe6080604052600080fdfea26474726f6e58221220cf16632623883066b8525f6df7b022e66531a93aeccc66d62749a9d9be97413864736f6c63430008060033",
+  "deployedBytecode": "0x6080604052600080fdfea26474726f6e58221220cf16632623883066b8525f6df7b022e66531a93aeccc66d62749a9d9be97413864736f6c63430008060033",
+  "sourceMap": "57:23:1:-:0;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;",
+  "deployedSourceMap": "57:23:1:-:0;;;;;",
+  "source": "// SPDX-License-Identifier: MIT\npragma solidity ^0.8.6;\n\ncontract Migrations{\n\n}",
+  "sourcePath": "/Users/prasad/projects/synthex/dex/contracts/Migrations.sol",
+  "ast": {
+    "absolutePath": "/Users/prasad/projects/synthex/dex/contracts/Migrations.sol",
+    "exportedSymbols": {
+      "Migrations": [
+        706
+      ]
+    },
+    "id": 707,
+    "license": "MIT",
+    "nodeType": "SourceUnit",
+    "nodes": [
+      {
+        "id": 705,
+        "literals": [
+          "solidity",
+          "^",
+          "0.8",
+          ".6"
+        ],
+        "nodeType": "PragmaDirective",
+        "src": "32:23:1"
+      },
+      {
+        "abstract": false,
+        "baseContracts": [],
+        "contractDependencies": [],
+        "contractKind": "contract",
+        "fullyImplemented": true,
+        "id": 706,
+        "linearizedBaseContracts": [
+          706
+        ],
+        "name": "Migrations",
+        "nameLocation": "66:10:1",
+        "nodeType": "ContractDefinition",
+        "nodes": [],
+        "scope": 707,
+        "src": "57:23:1",
+        "usedErrors": []
+      }
+    ],
+    "src": "32:48:1"
+  },
+  "legacyAST": {
+    "absolutePath": "/Users/prasad/projects/synthex/dex/contracts/Migrations.sol",
+    "exportedSymbols": {
+      "Migrations": [
+        706
+      ]
+    },
+    "id": 707,
+    "license": "MIT",
+    "nodeType": "SourceUnit",
+    "nodes": [
+      {
+        "id": 705,
+        "literals": [
+          "solidity",
+          "^",
+          "0.8",
+          ".6"
+        ],
+        "nodeType": "PragmaDirective",
+        "src": "32:23:1"
+      },
+      {
+        "abstract": false,
+        "baseContracts": [],
+        "contractDependencies": [],
+        "contractKind": "contract",
+        "fullyImplemented": true,
+        "id": 706,
+        "linearizedBaseContracts": [
+          706
+        ],
+        "name": "Migrations",
+        "nameLocation": "66:10:1",
+        "nodeType": "ContractDefinition",
+        "nodes": [],
+        "scope": 707,
+        "src": "57:23:1",
+        "usedErrors": []
+      }
+    ],
+    "src": "32:48:1"
+  },
+  "compiler": {
+    "name": "solc",
+    "version": "0.8.6+commit.0e36fba0.mod.Emscripten.clang"
+  },
+  "networks": {},
+  "schemaVersion": "2.0.1",
+  "updatedAt": "2022-10-31T07:02:14.445Z"
+}

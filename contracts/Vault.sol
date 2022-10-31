@@ -1,17 +1,19 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.17;
+pragma solidity ^0.8.6;
 
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {errors} from "./libraries/Errors.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
+// import {Errors} from "./libraries/Errors.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import './System.sol';
 
-contract Vault is Ownable {
+contract Vault {
     using SafeERC20 for IERC20;
     using SafeMath for uint256;
     System public system;
+
+    event TokensDeposited(address account, address token, uint256 amount);
+    event TokenWithdrawn(address account, address token, uint256 amount);
 
     constructor(address _system) {
         system = System(_system);
@@ -21,14 +23,14 @@ contract Vault is Ownable {
     mapping(address => mapping(address => uint256)) public userTokenBalanceInOrder;
 
     function deposit(address token, uint256 amount) external {
-        if (amount == 0) revert errors.ZeroAmt();
+        if (amount == 0) revert('ZeroAmt'); // Errors.ZeroAmt();
         userTokenBalance[msg.sender][token] = userTokenBalance[msg.sender][token].add(amount);
         IERC20(token).safeTransferFrom(msg.sender, address(this), amount);
         emit TokensDeposited(msg.sender, token, amount);
     }
 
     function withdraw(address token, uint256 amount) external {
-        if (amount == 0) revert errors.ZeroAmt();
+        if (amount == 0) revert('ZeroAmt'); // Errors.ZeroAmt();
         userTokenBalance[msg.sender][token] = userTokenBalance[msg.sender][token].sub(amount);
         IERC20(token).safeTransfer(msg.sender, amount);
         emit TokenWithdrawn(msg.sender, token, amount);
@@ -74,10 +76,7 @@ contract Vault is Ownable {
     }
 
     modifier onlyExchanger() {
-        if(msg.sender != address(system.exchange())) revert errors.NotAuthorized();
+        if(msg.sender != address(system.exchange())) revert('NotAuthorized'); // Errors.NotAuthorized();
         _;
     }
-
-    event TokensDeposited(address account, address token, uint256 amount);
-    event TokenWithdrawn(address account, address token, uint256 amount);
 }

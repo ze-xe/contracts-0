@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.17;
+pragma solidity ^0.8.6;
 
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { errors } from "./libraries/Errors.sol";
+// import { Errors } from "./libraries/Errors.sol";
 import "./Vault.sol";
 import "./System.sol";
 
@@ -28,7 +28,7 @@ contract Exchange {
         uint256 minToken0Order,
         uint256 minToken1Order
     );
-    
+
     enum OrderType {
         LIMITSELL,
         LIMITBUY
@@ -67,7 +67,7 @@ contract Exchange {
         uint256 minToken0Order,
         uint256 minToken1Order
     ) external {
-        if(msg.sender != system.admin()) revert errors.NotAuthorized();
+        if(msg.sender != system.admin()) revert('NotAuthorized'); //Errors.NotAuthorized();
 
         bytes32 pairHash = keccak256(abi.encodePacked(token0, token1));
         Pair storage pair = pairs[pairHash];
@@ -96,28 +96,28 @@ contract Exchange {
     ) external {
 
         Pair memory pair = pairs[keccak256(abi.encodePacked(token0, token1))];
-        if(pair.token0 == address(0)) revert errors.PairNotSupported();
+        if(pair.token0 == address(0)) revert('PairNotSupported'); // Errors.PairNotSupported();
 
         /* -------------------------------------------------------------------------- */
         /*                                 Validation                                 */
         /* -------------------------------------------------------------------------- */
 
         // exchange rate validation
-        if(exchangeRate == 0) revert errors.InvalidExchangeRate(exchangeRate);
+        if(exchangeRate == 0) revert('InvalidExchangeRate'); // Errors.InvalidExchangeRate(exchangeRate);
 
         // check for minimum order size
         if (orderType == uint256(OrderType.LIMITSELL)) {
-            if (amount < pair.minToken0Order) revert errors.InvalidOrderAmount(amount);
+            if (amount < pair.minToken0Order) revert('InvalidOrderAmount'); // Errors.InvalidOrderAmount(amount);
         } else if (orderType == uint256(OrderType.LIMITBUY)) {
-            if (amount < pair.minToken1Order) revert errors.InvalidOrderAmount(amount);
+            if (amount < pair.minToken1Order) revert('InvalidOrderAmount'); // Errors.InvalidOrderAmount(amount);
         } else {
-            revert errors.InvalidOrderType(orderType);
+            revert('InvalidOrderType'); // Errors.InvalidOrderType(orderType);
         }
 
         // if (
         //     orderType == uint256(OrderType.LIMITSELL) &&
         //     uint256(token1Amt / token0Amt) != exchangeRate
-        // ) revert errors.InvalidExchangeRate();
+        // ) revert(); // Errors.InvalidExchangeRate();
 
         bytes32 orderHash = keccak256(abi.encode(
             msg.sender,         // maker
@@ -180,8 +180,8 @@ contract Exchange {
         /* -------------------------------------------------------------------------- */
         /*                                 Validation                                 */
         /* -------------------------------------------------------------------------- */
-        if(order.maker == address(0)) revert errors.OrderNotFound(orderId);
-        if(order.amount - order.fill < fillAmount) revert errors.ZeroAmt();
+        if(order.maker == address(0)) revert('OrderNotFound'); // Errors.OrderNotFound(orderId);
+        if(order.amount - order.fill < fillAmount) revert('ZeroAmt'); // Errors.ZeroAmt();
         
         // Pair
         Pair memory pair = pairs[keccak256(abi.encodePacked(order.token0, order.token1))];
