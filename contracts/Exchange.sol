@@ -7,6 +7,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./Vault.sol";
 import "./System.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import "hardhat/console.sol";
 
 contract Exchange {
     using SafeERC20 for IERC20;
@@ -88,7 +89,8 @@ contract Exchange {
         address token1,
         uint256 amount, // amount of token0 to buy/sell
         uint256 orderType,
-        uint256 exchangeRate
+        uint256 exchangeRate,
+        uint256 nonce
     ) external {
         bytes32 pairHash = keccak256(abi.encodePacked(token0, token1));
         Pair memory pair = pairs[pairHash];
@@ -110,9 +112,11 @@ contract Exchange {
             token1,             // token1
             amount,             // amount
             orderType,          // orderType
-            exchangeRate        // exchangeRate
+            exchangeRate,       // exchangeRate
+            nonce               // nonce
         ));
-
+       console.log("Hs");
+       console.logBytes32(orderHash);
         Order storage order = placedOrders[orderHash];
         order.maker = msg.sender;
         // order.srcAmount = token0Amt;
