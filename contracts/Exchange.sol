@@ -95,7 +95,8 @@ contract Exchange {
         address token1,
         uint256 amount, // amount of token0 to buy/sell
         uint256 orderType,
-        uint256 exchangeRate
+        uint256 exchangeRate,
+        uint256 salt
     ) public {
         bytes32 pairHash = keccak256(abi.encodePacked(token0, token1));
         Pair memory pair = pairs[pairHash];
@@ -117,9 +118,10 @@ contract Exchange {
             token1,             // token1
             amount,             // amount
             orderType,          // orderType
-            exchangeRate        // exchangeRate
+            exchangeRate,       // exchangeRate
+            salt                // salt
         ));
-
+        
         Order storage order = placedOrders[orderHash];
         order.maker = msg.sender;
         // order.srcAmount = token0Amt;
@@ -246,6 +248,6 @@ contract Exchange {
         }
 
         // place order
-        createLimitOrder(token0, token1, amount, orderType, exchangeRate);
+        createLimitOrder(token0, token1, amount, orderType, exchangeRate, 0);
     }
 }
