@@ -1,25 +1,25 @@
 {
   "contractName": "Migrations",
   "abi": [],
-  "bytecode": "0x6080604052348015600f57600080fd5b50d38015601b57600080fd5b50d28015602757600080fd5b50603f8060356000396000f3fe6080604052600080fdfea26474726f6e58221220cf16632623883066b8525f6df7b022e66531a93aeccc66d62749a9d9be97413864736f6c63430008060033",
-  "deployedBytecode": "0x6080604052600080fdfea26474726f6e58221220cf16632623883066b8525f6df7b022e66531a93aeccc66d62749a9d9be97413864736f6c63430008060033",
-  "sourceMap": "57:23:1:-:0;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;",
-  "deployedSourceMap": "57:23:1:-:0;;;;;",
+  "bytecode": "0x6080604052348015600f57600080fd5b50d38015601b57600080fd5b50d28015602757600080fd5b50603f8060356000396000f3fe6080604052600080fdfea26474726f6e58221220369f09db4579d68c0e77e0136e7a7464502222407ec92a4d9b2dc91864cbb6ee64736f6c63430008060033",
+  "deployedBytecode": "0x6080604052600080fdfea26474726f6e58221220369f09db4579d68c0e77e0136e7a7464502222407ec92a4d9b2dc91864cbb6ee64736f6c63430008060033",
+  "sourceMap": "57:23:2:-:0;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;",
+  "deployedSourceMap": "57:23:2:-:0;;;;;",
   "source": "// SPDX-License-Identifier: MIT\npragma solidity ^0.8.6;\n\ncontract Migrations{\n\n}",
-  "sourcePath": "/Users/prasad/projects/synthex/dex/contracts/Migrations.sol",
+  "sourcePath": "/Users/prasad/projects/synthex/zexe/contracts/Migrations.sol",
   "ast": {
-    "absolutePath": "/Users/prasad/projects/synthex/dex/contracts/Migrations.sol",
+    "absolutePath": "/Users/prasad/projects/synthex/zexe/contracts/Migrations.sol",
     "exportedSymbols": {
       "Migrations": [
-        811
+        1488
       ]
     },
-    "id": 812,
+    "id": 1489,
     "license": "MIT",
     "nodeType": "SourceUnit",
     "nodes": [
       {
-        "id": 810,
+        "id": 1487,
         "literals": [
           "solidity",
           "^",
@@ -27,7 +27,7 @@
           ".6"
         ],
         "nodeType": "PragmaDirective",
-        "src": "32:23:1"
+        "src": "32:23:2"
       },
       {
         "abstract": false,
@@ -35,34 +35,34 @@
         "contractDependencies": [],
         "contractKind": "contract",
         "fullyImplemented": true,
-        "id": 811,
+        "id": 1488,
         "linearizedBaseContracts": [
-          811
+          1488
         ],
         "name": "Migrations",
-        "nameLocation": "66:10:1",
+        "nameLocation": "66:10:2",
         "nodeType": "ContractDefinition",
         "nodes": [],
-        "scope": 812,
-        "src": "57:23:1",
+        "scope": 1489,
+        "src": "57:23:2",
         "usedErrors": []
       }
     ],
-    "src": "32:48:1"
+    "src": "32:48:2"
   },
   "legacyAST": {
-    "absolutePath": "/Users/prasad/projects/synthex/dex/contracts/Migrations.sol",
+    "absolutePath": "/Users/prasad/projects/synthex/zexe/contracts/Migrations.sol",
     "exportedSymbols": {
       "Migrations": [
-        811
+        1488
       ]
     },
-    "id": 812,
+    "id": 1489,
     "license": "MIT",
     "nodeType": "SourceUnit",
     "nodes": [
       {
-        "id": 810,
+        "id": 1487,
         "literals": [
           "solidity",
           "^",
@@ -70,7 +70,7 @@
           ".6"
         ],
         "nodeType": "PragmaDirective",
-        "src": "32:23:1"
+        "src": "32:23:2"
       },
       {
         "abstract": false,
@@ -78,20 +78,20 @@
         "contractDependencies": [],
         "contractKind": "contract",
         "fullyImplemented": true,
-        "id": 811,
+        "id": 1488,
         "linearizedBaseContracts": [
-          811
+          1488
         ],
         "name": "Migrations",
-        "nameLocation": "66:10:1",
+        "nameLocation": "66:10:2",
         "nodeType": "ContractDefinition",
         "nodes": [],
-        "scope": 812,
-        "src": "57:23:1",
+        "scope": 1489,
+        "src": "57:23:2",
         "usedErrors": []
       }
     ],
-    "src": "32:48:1"
+    "src": "32:48:2"
   },
   "compiler": {
     "name": "solc",
@@ -99,5 +99,5 @@
   },
   "networks": {},
   "schemaVersion": "2.0.1",
-  "updatedAt": "2022-10-31T08:59:55.667Z"
+  "updatedAt": "2022-11-02T11:18:25.295Z"
 }

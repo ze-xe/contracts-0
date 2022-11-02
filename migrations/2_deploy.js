@@ -34,6 +34,7 @@ module.exports = async function(deployer, network) {
     await deployer.deploy(Vault, System.address)
     const vault = await Vault.deployed();
     console.log("Vault deployed to:", vault.address);
+
     await deployer.deploy(Exchange, System.address)
     const exchange = await Exchange.deployed();
     console.log("Exchange deployed to:", exchange.address);
@@ -43,21 +44,22 @@ module.exports = async function(deployer, network) {
 
     // deploy tokens
     await deployer.deploy(BTC)
+    await deployer.deploy(ETH)
+    await deployer.deploy(BTT)
+    await deployer.deploy(USDD)
+    await deployer.deploy(USDT)
+    await deployer.deploy(TRX)
+    
     const btc = await BTC.deployed();
     console.log("BTC deployed to:", btc.address);
-    await deployer.deploy(ETH)
     const eth = await ETH.deployed();
     console.log("ETH deployed to:", eth.address);
-    await deployer.deploy(BTT)
     const btt = await BTT.deployed();
     console.log("BTT deployed to:", btt.address);
-    await deployer.deploy(USDD)
     const usdd = await USDD.deployed();
     console.log("USDD deployed to:", usdd.address);
-    await deployer.deploy(USDT)
     const usdt = await USDT.deployed();
     console.log("USDT deployed to:", usdt.address);
-    await deployer.deploy(TRX)
     const trx = await TRX.deployed();
     console.log("TRX deployed to:", trx.address);
 

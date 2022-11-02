@@ -7,9 +7,11 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./Vault.sol";
 import "./System.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import "@openzeppelin/contracts/utils/math/Math.sol";
 
 contract Exchange {
     using SafeERC20 for IERC20;
+    using Math for uint256;
     using SafeMath for uint256;
     event OrderCreated(
         bytes32 orderId,
@@ -18,6 +20,11 @@ contract Exchange {
         uint256 amount,
         uint256 exchangeRate,
         uint256 orderType
+    );
+
+    event OrderUpdated(
+        bytes32 orderId,
+        uint256 amount
     );
 
     event OrderExecuted(bytes32 orderId, address taker, uint fillAmount);
@@ -89,7 +96,7 @@ contract Exchange {
         uint256 amount, // amount of token0 to buy/sell
         uint256 orderType,
         uint256 exchangeRate
-    ) external {
+    ) public {
         bytes32 pairHash = keccak256(abi.encodePacked(token0, token1));
         Pair memory pair = pairs[pairHash];
         if(pair.token0 == address(0)) revert('PairNotSupported'); // Errors.PairNotSupported();
@@ -143,10 +150,11 @@ contract Exchange {
 
     function updateLimitOrder(bytes32 orderId, uint256 amount) external {
         Order storage order = placedOrders[orderId];
+        if(msg.sender != order.maker) revert('NotAuthorized'); // Errors.NotAuthorized();
+
         Pair memory pair = pairs[keccak256(abi.encodePacked(order.token0, order.token1))];
 
         address token = order.token0;
-        
         if (order.amount < amount) {
             uint extraAmount = amount.sub(order.amount);
             if(order.orderType == uint256(OrderType.LIMITBUY)){
@@ -166,9 +174,11 @@ contract Exchange {
         }
         // update order amount
         order.amount = amount;
+
+        emit OrderUpdated(orderId, amount);
     }
 
-    function executeLimitOrder(bytes32 orderId, uint256 fillAmount) external {
+    function executeLimitOrder(bytes32 orderId, uint256 fillAmount) public returns(uint) {
         // Order
         Order storage order = placedOrders[orderId];
         /* -------------------------------------------------------------------------- */
@@ -179,9 +189,10 @@ contract Exchange {
         // Pair
         Pair memory pair = pairs[keccak256(abi.encodePacked(order.token0, order.token1))];
 
+
         // minus fill amount from order
+        fillAmount = fillAmount.max(order.amount);
         order.amount -= fillAmount;
-        
 
         uint256 token1FillAmount = fillAmount * order.exchangeRate / 10**pair.exchangeRateDecimals;
         if (order.orderType == uint256(OrderType.LIMITSELL)) {
@@ -219,6 +230,22 @@ contract Exchange {
         }
         else {
             revert('InvalidOrderType'); // Errors.InvalidOrderType(order.orderType);
-        }        
+        }
+
+        emit OrderExecuted(orderId, msg.sender, fillAmount);
+        return fillAmount;
+    }
+
+    function executeAndPlaceOrder(address token0, address token1, uint amount, uint exchangeRate, uint orderType, bytes32[] memory ordersToExecute) external {
+        // execute orders
+        for (uint i = 0; i < ordersToExecute.length; i++) {
+            require(placedOrders[ordersToExecute[i]].token0 != token0, 'Invalid Order');
+            require(placedOrders[ordersToExecute[i]].token1 != token1, 'Invalid Order'); 
+            amount = amount.sub(executeLimitOrder(ordersToExecute[i], amount));
+            if(amount == 0) return;
+        }
+
+        // place order
+        createLimitOrder(token0, token1, amount, orderType, exchangeRate);
     }
 }
