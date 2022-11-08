@@ -1,10 +1,13 @@
 import { Contract } from 'ethers';
 import { ethers } from 'hardhat';
+import auroraDeploy from './aurora';
 
 interface Deployments {
 	system: Contract;
 	vault: Contract;
 	exchange: Contract;
+	btc: Contract,
+	usdt: Contract,
 }
 
 export async function deploy(): Promise<Deployments> {
@@ -35,5 +38,24 @@ export async function deploy(): Promise<Deployments> {
 	console.log('Exchanger deployed to:', exchange.address);
 
 	await system.setExchange(exchange.address);
-	return { system, vault, exchange };
+
+	/* -------------------------------------------------------------------------- */
+	/*                                   Tokens                                   */
+	/* -------------------------------------------------------------------------- */
+	const BTC = await ethers.getContractFactory('BTC');
+	const btc = await BTC.deploy();
+	await btc.deployed();
+
+	const USDT = await ethers.getContractFactory('USDT');
+	const usdt = await USDT.deploy();
+	await usdt.deployed();
+
+	// create pair
+	await exchange.createPair(btc.address, usdt.address, '6', ethers.utils.parseEther("0.000001"));
+
+	return { system, vault, exchange, btc, usdt };
+}
+
+export const deployMain = async (network: string) => {
+	if(network == 'aurora_testnet') auroraDeploy()
 }

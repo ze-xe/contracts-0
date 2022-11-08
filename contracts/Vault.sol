@@ -3,9 +3,12 @@ pragma solidity ^0.8.6;
 
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+
 // import {Errors} from "./libraries/Errors.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import './System.sol';
+import 'hardhat/console.sol';
 
 contract Vault {
     using SafeERC20 for IERC20;
@@ -46,6 +49,7 @@ contract Vault {
         uint256 amount,
         address account
     ) external onlyExchanger {
+        // console.log('Locking %s %s for %s', amount, ERC20(token).symbol(), account);
         userTokenBalanceInOrder[account][token] = userTokenBalanceInOrder[account][token].add(amount);
     }
 

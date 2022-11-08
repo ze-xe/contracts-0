@@ -21,8 +21,10 @@ const config: HardhatUserConfig = {
       accounts: ["0x" + process.env.PRIVATE_KEY],
     },
     aurora_testnet: {
-      url: "https://aurora-testnet.infura.io/v3/444730ad427e4a02913619a3e7c1d06c",
+      url: "https://testnet.aurora.dev",
       accounts: ["0x" + process.env.PRIVATE_KEY],
+      chainId: 1313161555,
+      timeout: 2000000,
     },
     bttc_donau: {
       url: 'https://pre-rpc.bt.io/',

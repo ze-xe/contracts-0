@@ -8,6 +8,7 @@ import "./Vault.sol";
 import "./System.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/utils/math/Math.sol";
+import "hardhat/console.sol";
 
 contract Exchange {
     using SafeERC20 for IERC20;
@@ -22,10 +23,7 @@ contract Exchange {
         uint256 orderType
     );
 
-    event OrderUpdated(
-        bytes32 orderId,
-        uint256 amount
-    );
+    event OrderUpdated(bytes32 orderId, uint256 amount);
 
     event OrderExecuted(bytes32 orderId, address taker, uint fillAmount);
 
@@ -72,7 +70,7 @@ contract Exchange {
         uint256 exchangeRateDecimals,
         uint256 minToken0Order
     ) external {
-        if(msg.sender != system.admin()) revert('NotAuthorized'); //Errors.NotAuthorized();
+        if (msg.sender != system.admin()) revert("NotAuthorized"); //Errors.NotAuthorized();
 
         bytes32 pairHash = keccak256(abi.encodePacked(token0, token1));
         Pair storage pair = pairs[pairHash];
@@ -100,28 +98,30 @@ contract Exchange {
     ) public {
         bytes32 pairHash = keccak256(abi.encodePacked(token0, token1));
         Pair memory pair = pairs[pairHash];
-        if(pair.token0 == address(0)) revert('PairNotSupported'); // Errors.PairNotSupported();
+        if (pair.token0 == address(0)) revert("PairNotSupported"); // Errors.PairNotSupported();
 
         /* -------------------------------------------------------------------------- */
         /*                                 Validation                                 */
         /* -------------------------------------------------------------------------- */
 
         // exchange rate validation
-        if(exchangeRate == 0) revert('InvalidExchangeRate'); // Errors.InvalidExchangeRate(exchangeRate);
+        if (exchangeRate == 0) revert("InvalidExchangeRate"); // Errors.InvalidExchangeRate(exchangeRate);
 
-        // check for minimum order size        
-        if (amount < pair.minToken0Order) revert('InvalidOrderAmount'); // Errors.InvalidOrderAmount(amount);
-        
-        bytes32 orderHash = keccak256(abi.encode(
-            msg.sender,         // maker
-            token0,             // token0
-            token1,             // token1
-            amount,             // amount
-            orderType,          // orderType
-            exchangeRate,       // exchangeRate
-            salt                // salt
-        ));
-        
+        // check for minimum order size
+        if (amount < pair.minToken0Order) revert("InvalidOrderAmount"); // Errors.InvalidOrderAmount(amount);
+
+        bytes32 orderHash = keccak256(
+            abi.encode(
+                msg.sender, // maker
+                token0, // token0
+                token1, // token1
+                amount, // amount
+                orderType, // orderType
+                exchangeRate, // exchangeRate
+                salt // salt
+            )
+        );
+
         Order storage order = placedOrders[orderHash];
         order.maker = msg.sender;
         // order.srcAmount = token0Amt;
@@ -129,15 +129,22 @@ contract Exchange {
         order.token1 = token1;
         order.exchangeRate = exchangeRate;
         order.amount = amount;
+        order.orderType = orderType;
 
         // lock token0 or token1
         if (orderType == uint256(OrderType.LIMITSELL)) {
             system.vault().lockToken(order.token0, amount, msg.sender);
             system.vault().decreaseBalance(order.token0, amount, msg.sender);
         } else if (orderType == uint256(OrderType.LIMITBUY)) {
-            uint token1Amount = amount.mul(exchangeRate).div(10**pair.exchangeRateDecimals);
+            uint token1Amount = amount.mul(exchangeRate).div(
+                10**pair.exchangeRateDecimals
+            );
             system.vault().lockToken(order.token1, token1Amount, msg.sender);
-            system.vault().decreaseBalance(order.token1, token1Amount, msg.sender);
+            system.vault().decreaseBalance(
+                order.token1,
+                token1Amount,
+                msg.sender
+            );
         }
 
         emit OrderCreated(
@@ -152,24 +159,30 @@ contract Exchange {
 
     function updateLimitOrder(bytes32 orderId, uint256 amount) external {
         Order storage order = placedOrders[orderId];
-        if(msg.sender != order.maker) revert('NotAuthorized'); // Errors.NotAuthorized();
+        if (msg.sender != order.maker) revert("NotAuthorized"); // Errors.NotAuthorized();
 
-        Pair memory pair = pairs[keccak256(abi.encodePacked(order.token0, order.token1))];
+        Pair memory pair = pairs[
+            keccak256(abi.encodePacked(order.token0, order.token1))
+        ];
 
         address token = order.token0;
         if (order.amount < amount) {
             uint extraAmount = amount.sub(order.amount);
-            if(order.orderType == uint256(OrderType.LIMITBUY)){
+            if (order.orderType == uint256(OrderType.LIMITBUY)) {
                 token = order.token1;
-                extraAmount = extraAmount.mul(order.exchangeRate).div(10**pair.exchangeRateDecimals);
+                extraAmount = extraAmount.mul(order.exchangeRate).div(
+                    10**pair.exchangeRateDecimals
+                );
             }
             system.vault().lockToken(token, extraAmount, msg.sender);
             system.vault().decreaseBalance(token, extraAmount, order.maker);
         } else if (order.amount > amount) {
             uint lessAmount = order.amount.sub(amount);
-            if(order.orderType == uint256(OrderType.LIMITBUY)){
+            if (order.orderType == uint256(OrderType.LIMITBUY)) {
                 token = order.token1;
-                lessAmount = lessAmount.mul(order.exchangeRate).div(10**pair.exchangeRateDecimals);
+                lessAmount = lessAmount.mul(order.exchangeRate).div(
+                    10**pair.exchangeRateDecimals
+                );
             }
             system.vault().unlockToken(token, lessAmount, msg.sender);
             system.vault().increaseBalance(token, lessAmount, order.maker);
@@ -180,71 +193,128 @@ contract Exchange {
         emit OrderUpdated(orderId, amount);
     }
 
-    function executeLimitOrder(bytes32 orderId, uint256 fillAmount) public returns(uint) {
+    function executeLimitOrder(bytes32 orderId, uint256 fillAmount)
+        public
+        returns (uint)
+    {
         // Order
         Order storage order = placedOrders[orderId];
         /* -------------------------------------------------------------------------- */
         /*                                 Validation                                 */
         /* -------------------------------------------------------------------------- */
-        if(order.maker == address(0)) revert('OrderNotFound'); // Errors.OrderNotFound(orderId);
+        if (order.maker == address(0)) {
+            return 0;
+        }
 
         // Pair
-        Pair memory pair = pairs[keccak256(abi.encodePacked(order.token0, order.token1))];
-
+        Pair memory pair = pairs[
+            keccak256(abi.encodePacked(order.token0, order.token1))
+        ];
 
         // minus fill amount from order
-        fillAmount = fillAmount.max(order.amount);
+        fillAmount = fillAmount.min(order.amount);
         order.amount -= fillAmount;
 
-        uint256 token1FillAmount = fillAmount * order.exchangeRate / 10**pair.exchangeRateDecimals;
+        uint256 token1FillAmount = (fillAmount * order.exchangeRate) /
+            10**pair.exchangeRateDecimals;
         if (order.orderType == uint256(OrderType.LIMITSELL)) {
-            // unlock and decrement maker's token0 balance
+            // remove maker's locked token0 balance
             // increment msg.sender's token0 balance
             system.vault().unlockToken(order.token0, fillAmount, order.maker);
-            system.vault().decreaseBalance(order.token0, fillAmount, order.maker);
-            system.vault().increaseBalance(order.token0, fillAmount, msg.sender);
+            system.vault().increaseBalance(
+                order.token0,
+                fillAmount,
+                msg.sender
+            );
             // decrement msg.sender's token1 balance
             // increment maker's token1 balance
-            system.vault().decreaseBalance(order.token1, token1FillAmount, msg.sender);
-            system.vault().increaseBalance(order.token1, token1FillAmount, order.maker);
+            system.vault().decreaseBalance(
+                order.token1,
+                token1FillAmount,
+                msg.sender
+            );
+            system.vault().increaseBalance(
+                order.token1,
+                token1FillAmount,
+                order.maker
+            );
 
             // delete order if remaining order amount is less than minOrderAmount
-            if (order.amount < pair.minToken0Order){
-                system.vault().unlockToken(order.token0, order.amount, order.maker);
+            if (order.amount < pair.minToken0Order) {
+                system.vault().unlockToken(
+                    order.token0,
+                    order.amount,
+                    order.maker
+                );
                 delete placedOrders[orderId];
             }
         } else if (order.orderType == uint256(OrderType.LIMITBUY)) {
             // decrement msg.sender's token0 balance
             // increment maker's token0 balance
-            system.vault().decreaseBalance(order.token0, fillAmount, msg.sender);
-            system.vault().increaseBalance(order.token0, fillAmount, order.maker);
-            // unlock and decrement maker's token1 balance
+            system.vault().decreaseBalance(
+                order.token0,
+                fillAmount,
+                msg.sender
+            );
+            system.vault().increaseBalance(
+                order.token0,
+                fillAmount,
+                order.maker
+            );
+            // remove maker's locked token1 balance
             // increment msg.sender's token1 balance
-            system.vault().unlockToken(order.token1, token1FillAmount, order.maker);
-            system.vault().decreaseBalance(order.token1, token1FillAmount, order.maker);
-            system.vault().increaseBalance(order.token1, token1FillAmount, msg.sender);
+            system.vault().unlockToken(
+                order.token1,
+                token1FillAmount,
+                order.maker
+            );
+            system.vault().increaseBalance(
+                order.token1,
+                token1FillAmount,
+                msg.sender
+            );
 
             // delete order if remaining order amount is less than minOrderAmount
-            if (order.amount < pair.minToken0Order){
-                system.vault().unlockToken(order.token1, order.amount.mul(order.exchangeRate).div(10**pair.exchangeRateDecimals), order.maker);
+            if (order.amount < pair.minToken0Order) {
+                system.vault().unlockToken(
+                    order.token1,
+                    order.amount.mul(order.exchangeRate).div(
+                        10**pair.exchangeRateDecimals
+                    ),
+                    order.maker
+                );
                 delete placedOrders[orderId];
             }
-        }
-        else {
-            revert('InvalidOrderType'); // Errors.InvalidOrderType(order.orderType);
+        } else {
+            revert("InvalidOrderType"); // Errors.InvalidOrderType(order.orderType);
         }
 
         emit OrderExecuted(orderId, msg.sender, fillAmount);
         return fillAmount;
     }
 
-    function executeAndPlaceOrder(address token0, address token1, uint amount, uint exchangeRate, uint orderType, bytes32[] memory ordersToExecute) external {
+    function executeAndPlaceOrder(
+        address token0,
+        address token1,
+        uint amount,
+        uint exchangeRate,
+        uint orderType,
+        bytes32[] memory ordersToExecute
+    ) external {
         // execute orders
         for (uint i = 0; i < ordersToExecute.length; i++) {
-            require(placedOrders[ordersToExecute[i]].token0 != token0, 'Invalid Order');
-            require(placedOrders[ordersToExecute[i]].token1 != token1, 'Invalid Order'); 
-            amount = amount.sub(executeLimitOrder(ordersToExecute[i], amount));
-            if(amount == 0) return;
+            Order memory order = placedOrders[ordersToExecute[i]];
+            if (
+                order.token0 == token0 &&
+                order.token1 == token1 &&
+                order.orderType < 2 &&
+                order.orderType != orderType
+            ) {
+                amount = amount.sub(
+                    executeLimitOrder(ordersToExecute[i], amount)
+                );
+                if (amount == 0) return;
+            }
         }
 
         // place order
