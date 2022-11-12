@@ -1,7 +1,8 @@
-import { deploy } from "./deploy";
+import { deployMain } from "./deploy";
+import hre from 'hardhat';
 
 async function main() {
-  await deploy();
+  await deployMain(hre.network.name);
 }
 
 // We recommend this pattern to be able to use async/await everywhere
