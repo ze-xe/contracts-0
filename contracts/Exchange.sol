@@ -318,6 +318,8 @@ contract Exchange {
         }
 
         // place order
-        createLimitOrder(token0, token1, amount, orderType, exchangeRate, 0);
+        if(amount > pairs[keccak256(abi.encodePacked(token0, token1))].minToken0Order) {
+            createLimitOrder(token0, token1, amount, orderType, exchangeRate, 0);
+        }
     }
 }

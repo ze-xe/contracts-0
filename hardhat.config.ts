@@ -48,6 +48,11 @@ const config: HardhatUserConfig = {
       },
     ],
   },
+  etherscan: {
+    apiKey: {
+      auroraTestnet: 'KXKDYB8C31DM98X1UXY3WZPIPE96B752KU',
+    }
+  },
 };
 
 export default config;

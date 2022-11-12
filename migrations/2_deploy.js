@@ -64,14 +64,14 @@ module.exports = async function(deployer, network) {
     console.log("TRX deployed to:", trx.address);
 
     // create pairs
-    await exchange.createPair(btc.address, usdd.address, "6", ethers.utils.parseEther("0.000001").toString())
+    await exchange.createPair(btc.address, usdd.address, "2", ethers.utils.parseEther("0.00001").toString())
     console.log('BTC/USDD pair created')
-    await exchange.createPair(eth.address, usdd.address, "4", ethers.utils.parseEther("0.0001").toString())
+    await exchange.createPair(eth.address, usdd.address, "2", ethers.utils.parseEther("0.0001").toString())
     console.log('ETH/USDD pair created')
-    await exchange.createPair(btt.address, usdd.address, "12", ethers.utils.parseEther("1000000").toString())
+    await exchange.createPair(btt.address, usdd.address, "10", ethers.utils.parseEther("100000").toString())
     console.log('BTT/USDD pair created')
-    await exchange.createPair(usdt.address, usdd.address, "4", ethers.utils.parseEther("1").toString())
+    await exchange.createPair(usdt.address, usdd.address, "3", ethers.utils.parseEther("1").toString())
     console.log('USDT/USDD pair created')
-    await exchange.createPair(trx.address, usdd.address, "8", ethers.utils.parseEther("10").toString())
+    await exchange.createPair(trx.address, usdd.address, "5", ethers.utils.parseEther("10").toString())
     console.log('TRX/USDD pair created')
 };
